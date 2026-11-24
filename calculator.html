@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Monolithic Instrument Console - Velocity Build v9</title>
+    <style>
+        /* ==========================================
+           1. CORE ATOMIC CONFIGURATION & THEMES
+           ========================================== */
+        :root {
+            --pat-curve: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 60 C 30 0, 30 60, 60 0' stroke='rgba(0,0,0,0.06)' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+            --pat-grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Crect width='20' height='20' fill='none' stroke='rgba(0,0,0,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+            --pat-iso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='41.56' viewBox='0 0 24 41.56'%3E%3Cpath d='M12 0 L24 6.93 L24 20.78 L12 27.71 L0 20.78 L0 6.93 Z' fill='none' stroke='rgba(0,0,0,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+            --grain-layer: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.80' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+
+            --bg-page: #f0f0f3; --bg-calc: #e0e0e0; --text-main: #1a1a1a;
+            --shadow-drop-dark: #bebebe; --shadow-drop-light: #ffffff;
+            --shadow-inner-dark: #b8b8b8; --shadow-inner-light: #ffffff;
+            --border-glow: rgba(0, 0, 0, 0.02);
+            --font-engine: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --active-wallpaper: var(--pat-curve);
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #141416; --bg-calc: #1e1e22; --text-main: #e2e2e8;
+            --shadow-drop-dark: #0f0f11; --shadow-drop-light: #2d2d34;
+            --shadow-inner-dark: #131317; --shadow-inner-light: #2a2a30;
+            --border-glow: rgba(255, 255, 255, 0.02);
+        }
+        [data-theme="blue"] {
+            --bg-page: #040d1a; --bg-calc: #0a192f; --text-main: #f0f5ff;
+            --shadow-drop-dark: #020710; --shadow-drop-light: #122b50;
+            --shadow-inner-dark: #040f1f; --shadow-inner-light: #102749;
+            --border-glow: rgba(255, 255, 255, 0.03);
+        }
+        [data-theme="green"] {
+            --bg-page: #081c15; --bg-calc: #1b4332; --text-main: #d8f3dc;
+            --shadow-drop-dark: #040c0a; --shadow-drop-light: #2d6a4f;
+            --shadow-inner-dark: #112a20; --shadow-inner-light: #22573e;
+            --border-glow: rgba(255, 255, 255, 0.04);
+        }
+        [data-theme="kids"] {
+            --bg-page: #f7f4eb; --bg-calc: #e9e3d3; --text-main: #5c5243;
+            --shadow-drop-dark: #d2cbb8; --shadow-drop-light: #ffffff;
+            --shadow-inner-dark: #cbc3ae; --shadow-inner-light: #f5f0e3;
+            --border-glow: rgba(0, 0, 0, 0.01);
+        }
+        [data-theme="adult"] {
+            --bg-page: #e6e7eb; --bg-calc: #d2d5db; --text-main: #2b2d31;
+            --shadow-drop-dark: #b8bbc2; --shadow-drop-light: #ecedf1;
+            --shadow-inner-dark: #c2c5cc; --shadow-inner-light: #dee0e4;
+            --border-glow: rgba(0, 0, 0, 0.02);
+        }
+        [data-theme="senior"] {
+            --bg-page: #050505; --bg-calc: #121212; --text-main: #ffb703;
+            --shadow-drop-dark: #000000; --shadow-drop-light: #242424;
+            --shadow-inner-dark: #0a0a0a; --shadow-inner-light: #1f1f1f;
+            --border-glow: rgba(255, 255, 255, 0.05);
+        }
+        [data-theme="student"] {
+            --bg-page: #0b1315; --bg-calc: #142124; --text-main: #80ed99;
+            --shadow-drop-dark: #070c0e; --shadow-drop-light: #21353a;
+            --shadow-inner-dark: #0d1618; --shadow-inner-light: #1b2d31;
+            --border-glow: rgba(255, 255, 255, 0.03);
+        }
+
+        /* ==========================================
+           2. RENDER OVERHAUL & STRUCTURE
+           ========================================== */
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: var(--font-engine); user-select: none;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* Removes mobile double-tap delays */
+        }
+
+        body {
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; background-color: var(--bg-page); padding: 12px;
+            overflow: hidden; transform: translate3d(0,0,0);
+        }
+
+        .workspace-wrapper {
+            display: flex; justify-content: center; align-items: center;
+            width: 100%; max-width: 360px; transform: translate3d(0,0,0);
+        }
+
+        /* MAIN CALCULATOR FRAME */
+        .calculator-frame {
+            width: 100%; height: calc(100vh - 30px); 
+            max-height: 560px; min-height: 480px; background-color: var(--bg-calc);
+            background-image: var(--active-wallpaper), var(--grain-layer);
+            background-repeat: repeat; background-position: center; border-radius: 28px; 
+            padding: 14px; display: flex; flex-direction: column;
+            box-shadow: 12px 12px 24px var(--shadow-drop-dark), -12px -12px 24px var(--shadow-drop-light);
+            border: 1px solid var(--border-glow); position: relative; overflow: hidden;
+            transform: translate3d(0,0,0); backface-visibility: hidden; will-change: transform;
+        }
+
+        /* UTILITY DOCK RECONFIGURED TO HIGH-RESPONSE CIRCLES */
+        .extruded-utility-dock-top {
+            display: flex; flex-direction: row; justify-content: space-between;
+            align-items: center; width: 100%; gap: 12px; margin-bottom: 14px; flex-shrink: 0;
+            transform: translate3d(0, 0, 0); backface-visibility: hidden;
+        }
+
+        .rect-btn {
+            width: 40px; height: 40px; border-radius: 50%; /* Pure Circle Geometry */
+            background-color: var(--bg-calc); background-image: var(--grain-layer);
+            color: var(--text-main); border: none; outline: none; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 0.95rem; font-weight: 600;
+            box-shadow: 3px 3px 6px var(--shadow-drop-dark), -3px -3px 6px var(--shadow-drop-light);
+            transition: transform 0.05s ease, box-shadow 0.05s ease;
+            transform: translate3d(0,0,0); will-change: transform;
+        }
+
+        /* High-Response Instant Active Feedback Classes */
+        .rect-btn.ui-depressed, .rect-btn:active {
+            box-shadow: inset 2.5px 2.5px 5px var(--shadow-inner-dark), inset -2.5px -2.5px 5px var(--shadow-inner-light) !important;
+            transform: scale(0.92) translate3d(0,0,0) !important;
+        }
+
+        /* DISPLAY SYSTEM */
+        .output-screen {
+            width: 100%; height: 20%; max-height: 90px; border-radius: 18px;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 8px 14px;
+            box-shadow: inset 4px 4px 8px rgba(0,0,0,0.3), inset -3px -3px 6px rgba(255,255,255,0.06);
+            background: linear-gradient(135deg, #141b1f 0%, #090d0f 100%);
+            border: 1px solid rgba(0, 0, 0, 0.2); margin-bottom: 12px; flex-shrink: 0; z-index: 10;
+            transform: translate3d(0,0,0);
+        }
+
+        .screen-top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; color: #8da2ae; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .mode-indicator { background: rgba(255, 255, 255, 0.08); padding: 1px 5px; border-radius: 4px; text-transform: uppercase; cursor: pointer;}
+
+        .screen-display-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; width: 100%; overflow: hidden; }
+        .screen-sub-text { color: #6a828f; font-size: 0.75rem; font-weight: 500; width: 100%; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.2em; }
+        .screen-text { color: #ffffff; font-size: clamp(1.2rem, 3.2vh, 1.5rem); font-weight: 700; width: 100%; text-align: right; white-space: nowrap; overflow: hidden; letter-spacing: -0.5px; text-overflow: ellipsis; line-height: 1.1; }
+
+        /* INTERACTION CONSOLE MATRIX */
+        .interactive-area { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr) 1fr; gap: 8px; flex-grow: 1; width: 100%; z-index: 10; transform: translate3d(0,0,0); }
+
+        .btn {
+            background-color: var(--bg-calc); background-image: var(--grain-layer); background-clip: padding-box; 
+            color: var(--text-main); border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; border: none; outline: none;
+            box-shadow: 3px 3px 6px var(--shadow-drop-dark), -3px -3px 6px var(--shadow-drop-light);
+            height: 100%; width: 100%; font-size: 1.05rem; font-weight: 600; position: relative;
+            transition: transform 0.05s ease, box-shadow 0.05s ease;
+            transform: translate3d(0,0,0); backface-visibility: hidden; will-change: transform;
+        }
+
+        .btn.ui-depressed, .btn:active {
+            box-shadow: inset 2.5px 2.5px 5px var(--shadow-inner-dark), inset -2.5px -2.5px 5px var(--shadow-inner-light) !important;
+            transform: scale(0.93) translate3d(0,0,0) !important;
+        }
+
+        /* INTEGRATED OPERATOR AND FOOTER MATRIXES */
+        .fused-operator-spine { grid-column: 4; grid-row: 1 / span 5; display: grid; grid-template-rows: repeat(5, 1fr); background-color: var(--bg-calc); border-radius: 14px; box-shadow: 3px 3px 6px var(--shadow-drop-dark), -3px -3px 6px var(--shadow-drop-light); padding: 1px; }
+        .fused-operator-spine .btn { box-shadow: none; border-radius: 0; font-size: 1.15rem; }
+        .fused-operator-spine .btn:first-child { border-top-left-radius: 13px; border-top-right-radius: 13px; }
+        .fused-operator-spine .btn:last-child { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
+
+        .fused-footer-deck { grid-column: 1 / span 3; grid-row: 5; display: grid; grid-template-columns: repeat(3, 1fr); background-color: var(--bg-calc); border-radius: 12px; box-shadow: 3px 3px 6px var(--shadow-drop-dark), -3px -3px 6px var(--shadow-drop-light); padding: 1px; }
+        .fused-footer-deck .btn { box-shadow: none; border-radius: 0; }
+        .fused-footer-deck .btn:first-child { border-top-left-radius: 11px; border-bottom-left-radius: 11px; }
+        .fused-footer-deck .btn:last-child { border-top-right-radius: 11px; border-bottom-right-radius: 11px; }
+
+        .r1-c1 { grid-column: 1; grid-row: 1; } .r1-c2 { grid-column: 2; grid-row: 1; } .r1-c3 { grid-column: 3; grid-row: 1; }
+        .r2-c1 { grid-column: 1; grid-row: 2; } .r2-c2 { grid-column: 2; grid-row: 2; } .r2-c3 { grid-column: 3; grid-row: 2; }
+        .r3-c1 { grid-column: 1; grid-row: 3; } .r3-c2 { grid-column: 2; grid-row: 3; } .r3-c3 { grid-column: 3; grid-row: 3; }
+        .r4-c1 { grid-column: 1; grid-row: 4; } .r4-c2 { grid-column: 2; grid-row: 4; } .r4-c3 { grid-column: 3; grid-row: 4; }
+        .trig-launcher-btn { font-weight: 700; color: var(--text-main); font-size: 1.1rem; }
+
+        /* ==========================================
+           3. GPU HARDWARE-ACCELERATED ULTRA-FLUID DRAWERS
+           ========================================== */
+        .side-tray {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: calc(100% - 20% - 62px);
+            background: var(--bg-calc); background-image: var(--grain-layer); z-index: 200;
+            display: flex; flex-direction: column; padding: 14px;
+            border-top: 1px solid var(--border-glow); border-radius: 22px 22px 0 0;
+            box-shadow: 0 -8px 24px rgba(0,0,0,0.18);
+            
+            /* Forces GPU Rasterization layer instantiation */
+            transform: translate3d(0, 105%, 0); 
+            will-change: transform; 
+            backface-visibility: hidden;
+            
+            /* Optimized layout curve for zero mobile lag */
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .side-tray.open { transform: translate3d(0, 0, 0) !important; }
+        .tray-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--text-main); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase; }
+        .tray-close-btn { background: var(--bg-calc); border: 1px solid var(--border-glow); padding: 4px 10px; border-radius: 8px; cursor: pointer; font-weight: 700; color: var(--text-main); box-shadow: 2px 2px 4px var(--shadow-drop-dark), -2px -2px 4px var(--shadow-drop-light); font-size: 0.65rem; text-transform: uppercase; }
+
+        .history-log-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-main); text-align: right; padding-right: 4px; -webkit-overflow-scrolling: touch; }
+        .history-item { border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 4px; opacity: 0.85; }
+
+        .settings-scroll-zone { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; -webkit-overflow-scrolling: touch; }
+        .setting-section-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-main); opacity: 0.6; margin-bottom: 4px; font-weight: 700; }
+        
+        .embedded-well { background-color: var(--bg-calc); padding: 4px; border-radius: 10px; box-shadow: inset 2px 2px 4px var(--shadow-inner-dark), inset -2px -2px 4px var(--shadow-inner-light); }
+        
+        .theme-container-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .theme-grid-btn { background: none; border: none; padding: 6px 2px; font-size: 0.55rem; font-weight: 700; color: var(--text-main); cursor: pointer; border-radius: 7px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .theme-grid-btn.active { background-color: var(--bg-calc); box-shadow: 2px 2px 4px var(--shadow-drop-dark), -1px -1px 3px var(--shadow-drop-light); }
+
+        .converter-tab-deck { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto !important; white-space: nowrap; padding: 5px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .converter-tab-deck::-webkit-scrollbar { height: 3px; }
+        .converter-tab-deck::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+        .converter-tab-btn { flex-shrink: 0; min-width: 52px; background: none; border: none; padding: 6px 4px; font-size: 0.58rem; font-weight: 700; color: var(--text-main); opacity: 0.5; cursor: pointer; border-radius: 7px; text-transform: uppercase; }
+        .converter-tab-btn.active { opacity: 1; background-color: var(--bg-calc); box-shadow: 2px 2px 4px var(--shadow-drop-dark), -1px -1px 3px var(--shadow-drop-light); }
+        
+        .converter-io-rack { display: flex; flex-direction: column; gap: 8px; }
+        .converter-row { display: grid; grid-template-columns: 55px 1fr; align-items: center; gap: 8px; }
+        .converter-label { font-size: 0.62rem; font-weight: 700; color: var(--text-main); opacity: 0.6; text-transform: uppercase; }
+        
+        .converter-select { background: var(--bg-calc); border: none; outline: none; padding: 6px 4px; color: var(--text-main); font-size: 0.72rem; font-weight: 600; border-radius: 8px; box-shadow: 2px 2px 4px var(--shadow-drop-dark), -1px -1px 3px var(--shadow-drop-light); width: 100%; }
+        .converter-field { background-color: var(--bg-calc); border: none; outline: none; padding: 6px 10px; color: var(--text-main); font-size: 0.8rem; font-weight: 600; text-align: right; border-radius: 8px; box-shadow: inset 2px 2px 4px var(--shadow-inner-dark), inset -2px -2px 4px var(--shadow-inner-light); width: 100%; }
+        .system-dropdown { width: 100%; background: var(--bg-calc); border: none; outline: none; padding: 8px; color: var(--text-main); font-size: 0.72rem; font-weight: 600; border-radius: 8px; box-shadow: inset 2px 2px 4px var(--shadow-inner-dark), inset -2px -2px 4px var(--shadow-inner-light); }
+
+        .theta-grid-layout { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; flex-grow: 1; padding-top: 2px; }
+        .theta-grid-layout .btn { font-size: 0.7rem; font-weight: 700; border-radius: 8px; padding: 0; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="workspace-wrapper">
+        <div class="calculator-frame">
+            <div class="extruded-utility-dock-top" id="utility-dock">
+                <button class="rect-btn" data-action="clear">⎋</button>
+                <button class="rect-btn" data-action="backspace">&larr;</button>
+                <button class="rect-btn" data-action="open-converter">⇄</button>
+                <button class="rect-btn" data-action="open-history-tray">🕒</button>
+                <button class="rect-btn" data-action="open-settings">⚙</button>
+            </div>
+
+            <div class="output-screen">
+                <div class="screen-top-bar">
+                    <div class="clock-container"><span id="timer-hdr">00:00:00</span></div>
+                    <span class="weather-display" id="weather-hdr">31°C | THN</span>
+                    <span class="mode-indicator" id="angle-mode-display" data-action="toggle-angle-mode">deg</span>
+                </div>
+                <div class="screen-display-wrapper">
+                    <div class="screen-sub-text" id="display-sub-value"></div>
+                    <div class="screen-text" id="display-value">0</div>
+                </div>
+            </div>
+
+            <div class="interactive-area" id="input-grid-matrix">
+                <div class="fused-operator-spine">
+                    <button class="btn" data-action="append-formula" data-formula-token="/">&divide;</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="*">&times;</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="-">&minus;</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="+">&plus;</button>
+                    <button class="btn" data-action="evaluate-formula" style="font-weight:700;">&equals;</button>
+                </div>
+                
+                <button class="btn r1-c1" data-action="percent">%</button>
+                <button class="btn r1-c2" data-action="parentheses">( )</button>
+                <button class="btn r1-c3" data-action="toggle-polarity" style="font-weight:700;">&plusmn;</button>
+
+                <button class="btn r2-c1" data-action="append-formula" data-formula-token="7">7</button>
+                <button class="btn r2-c2" data-action="append-formula" data-formula-token="8">8</button>
+                <button class="btn r2-c3" data-action="append-formula" data-formula-token="9">9</button>
+
+                <button class="btn r3-c1" data-action="append-formula" data-formula-token="4">4</button>
+                <button class="btn r3-c2" data-action="append-formula" data-formula-token="5">5</button>
+                <button class="btn r3-c3" data-action="append-formula" data-formula-token="6">6</button>
+
+                <button class="btn r4-c1" data-action="append-formula" data-formula-token="1">1</button>
+                <button class="btn r4-c2" data-action="append-formula" data-formula-token="2">2</button>
+                <button class="btn r4-c3" data-action="append-formula" data-formula-token="3">3</button>
+
+                <div class="fused-footer-deck">
+                    <button class="btn" data-action="append-formula" data-formula-token=".">.</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="0">0</button>
+                    <button class="btn trig-launcher-btn" data-action="open-theta-panel">&theta;</button>
+                </div>
+            </div>
+
+            <div class="side-tray" id="theta-drawer-panel">
+                <div class="tray-title-bar">
+                    <span>Transcendental Core</span>
+                    <button class="tray-close-btn" data-action="close-theta-panel">Close</button>
+                </div>
+                <div class="theta-grid-layout">
+                    <button class="btn" data-action="append-formula" data-formula-token="sin(">sin</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="cos(">cos</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="tan(">tan</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="asin(">sin⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="acos(">cos⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="csc(">csc</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="sec(">sec</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="cot(">cot</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="acsc(">csc⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="asec(">sec⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="sqrt(">&radic;x</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="cbrt(">&#8731;x</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="log(">log</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="atan(">tan⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="acot(">cot⁻¹</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="π">&pi;</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="e">e</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="!">x!</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="abs(">|x|</button>
+                    <button class="btn" data-action="append-formula" data-formula-token="^">^</button>
+                </div>
+            </div>
+
+            <div class="side-tray" id="converter-panel">
+                <div class="tray-title-bar">
+                    <span>Universal Converter Core</span>
+                    <button class="tray-close-btn" data-action="close-converter">Close</button>
+                </div>
+                
+                <div class="embedded-well converter-tab-deck">
+                    <button class="converter-tab-btn active" id="tab-length" data-action="switch-domain" data-domain="length">Len</button>
+                    <button class="converter-tab-btn" id="tab-mass" data-action="switch-domain" data-domain="mass">Mass</button>
+                    <button class="converter-tab-btn" id="tab-temp" data-action="switch-domain" data-domain="temp">Temp</button>
+                    <button class="converter-tab-btn" id="tab-curr" data-action="switch-domain" data-domain="curr">Curr</button>
+                    <button class="converter-tab-btn" id="tab-volume" data-action="switch-domain" data-domain="volume">Vol</button>
+                    <button class="converter-tab-btn" id="tab-area" data-action="switch-domain" data-domain="area">Area</button>
+                    <button class="converter-tab-btn" id="tab-data" data-action="switch-domain" data-domain="data">Data</button>
+                    <button class="converter-tab-btn" id="tab-speed" data-action="switch-domain" data-domain="speed">Spd</button>
+                    <button class="converter-tab-btn" id="tab-time" data-action="switch-domain" data-domain="time">Time</button>
+                    <button class="converter-tab-btn" id="tab-hist" data-action="open-logs">Logs</button>
+                </div>
+
+                <div class="history-log-list" id="history-items-container" style="display:none; flex-grow:1; margin-bottom:10px;"></div>
+
+                <div class="converter-io-rack" id="converter-io-inputs">
+                    <div class="converter-row">
+                        <span class="converter-label">From</span>
+                        <select class="converter-select" id="convert-from-unit"></select>
+                    </div>
+                    <div class="converter-row">
+                        <span class="converter-label">Input</span>
+                        <input type="number" class="converter-field" id="convert-from-value" value="1" step="any">
+                    </div>
+                    <div class="converter-row" style="margin-top:4px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:12px;">
+                        <span class="converter-label">To</span>
+                        <select class="converter-select" id="convert-to-unit"></select>
+                    </div>
+                    <div class="converter-row">
+                        <span class="converter-label">Output</span>
+                        <input type="text" class="converter-field" id="convert-to-value" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-tray" id="settings-panel">
+                <div class="tray-title-bar">
+                    <span>System Matrix</span>
+                    <button class="tray-close-btn" data-action="close-settings">Close</button>
+                </div>
+                <div class="settings-scroll-zone">
+                    <div>
+                        <div class="setting-section-label">Standard Environments</div>
+                        <div class="embedded-well theme-container-grid" style="margin-bottom: 8px;">
+                            <button class="theme-grid-btn active" id="theme-l-btn" data-action="theme-light">Light</button>
+                            <button class="theme-grid-btn" id="theme-d-btn" data-action="theme-dark">Dark</button>
+                            <button class="theme-grid-btn" id="theme-b-btn" data-action="theme-blue">Cobalt</button>
+                            <button class="theme-grid-btn" id="theme-g-btn" data-action="theme-green">Forest</button>
+                        </div>
+                        <div class="setting-section-label">Ergonomic Profiles</div>
+                        <div class="embedded-well theme-container-grid">
+                            <button class="theme-grid-btn" id="theme-k-btn" data-action="theme-kids">Soft Cream</button>
+                            <button class="theme-grid-btn" id="theme-a-btn" data-action="theme-adult">Daily Ink</button>
+                            <button class="theme-grid-btn" id="theme-s-btn" data-action="theme-senior">Hi-Ambr</button>
+                            <button class="theme-grid-btn" id="theme-st-btn" data-action="theme-student">Fcs Teal</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="setting-section-label">Structural Texture Profile</div>
+                        <div class="embedded-well" style="padding: 6px;">
+                            <select class="system-dropdown" id="wallpaper-pattern-selector">
+                                <option value="curve">Rhythm Curve</option>
+                                <option value="grid">Technical Grid</option>
+                                <option value="iso">Isometric Dot</option>
+                                <option value="none">Minimal Clean</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="setting-section-label">Chronometer Configuration</div>
+                        <div class="embedded-well theme-container-grid">
+                            <button class="theme-grid-btn active" id="clk-dig-btn" data-action="clk-digital">Digital</button>
+                            <button class="theme-grid-btn" id="clk-off-btn" data-action="clk-hidden">Hidden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display-value');
+        const displaySub = document.getElementById('display-sub-value');
+        const historyContainer = document.getElementById('history-items-container');
+        const converterPanel = document.getElementById('converter-panel');
+        const settingsPanel = document.getElementById('settings-panel');
+        const thetaDrawerPanel = document.getElementById('theta-drawer-panel');
+        const angleModeDisplay = document.getElementById('angle-mode-display');
+        const timerHdr = document.getElementById('timer-hdr');
+        const fromSel = document.getElementById('convert-from-unit');
+        const toSel = document.getElementById('convert-to-unit');
+        const fromValInput = document.getElementById('convert-from-value');
+        const outField = document.getElementById('convert-to-value');
+        
+        let formulaString = '0'; let subFormulaString = ''; let isExecutionState = false;
+        let logsMemory = []; let angleMode = 'deg'; let clockDisplayMode = 'digital'; 
+        let currentConverterDomain = 'length';
+        let exchangeVault = { INR: 83.45, EUR: 0.92, GBP: 0.78, JPY: 157.20, USD: 1.00 };
+
+        const unitMatrix = {
+            length: { units: ['Meters', 'Kilometers', 'Centimeters', 'Feet', 'Inches'], toBase: { Meters: 1, Kilometers: 1000, Centimeters: 0.01, Feet: 0.3048, Inches: 0.0254 }, fromBase: { Meters: 1, Kilometers: 0.001, Centimeters: 100, Feet: 3.28084, Inches: 39.3701 } },
+            mass: { units: ['Kilograms', 'Grams', 'Pounds', 'Ounces'], toBase: { Kilograms: 1, Grams: 0.001, Pounds: 0.453592, Ounces: 0.0283495 }, fromBase: { Kilograms: 1, Grams: 1000, Pounds: 2.20462, Ounces: 35.274 } },
+            temp: { units: ['Celsius', 'Fahrenheit', 'Kelvin'] },
+            curr: { get units() { return ['INR', 'USD', 'EUR', 'GBP', 'JPY']; }, get toBase() { return { INR: 1/exchangeVault.INR, USD: 1, EUR: 1/exchangeVault.EUR, GBP: 1/exchangeVault.GBP, JPY: 1/exchangeVault.JPY }; }, get fromBase() { return { INR: exchangeVault.INR, USD: 1, EUR: exchangeVault.EUR, GBP: exchangeVault.GBP, JPY: exchangeVault.JPY }; } },
+            volume: { units: ['Liters', 'Milliliters', 'Cubic Meters', 'Gallons', 'Cups'], toBase: { Liters: 1, Milliliters: 0.001, 'Cubic Meters': 1000, Gallons: 3.78541, Cups: 0.24 }, fromBase: { Liters: 1, Milliliters: 1000, 'Cubic Meters': 0.001, Gallons: 0.264172, Cups: 4.16667 } },
+            area: { units: ['Square Meters', 'Square Kilometers', 'Square Feet', 'Acres', 'Hectares'], toBase: { 'Square Meters': 1, 'Square Kilometers': 1000000, 'Square Feet': 0.092903, Acres: 4046.86, Hectares: 10000 }, fromBase: { 'Square Meters': 1, 'Square Kilometers': 0.000001, 'Square Feet': 10.7639, Acres: 0.000247105, Hectares: 0.0001 } },
+            data: { units: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'], toBase: { Bytes: 1, Kilobytes: 1024, Megabytes: 1048576, Gigabytes: 1073741824, Terabytes: 1099511627776 }, fromBase: { Bytes: 1, Kilobytes: 1/1024, Megabytes: 1/1048576, Gigabytes: 1/1073741824, Terabytes: 1/1099511627776 } },
+            speed: { units: ['m/s', 'km/h', 'mph', 'Knots'], toBase: { 'm/s': 1, 'km/h': 1/3.6, mph: 0.44704, Knots: 0.514444 }, fromBase: { 'm/s': 1, 'km/h': 3.6, mph: 2.23694, Knots: 1.94384 } },
+            time: { units: ['Seconds', 'Minutes', 'Hours', 'Days', 'Weeks'], toBase: { Seconds: 1, Minutes: 60, Hours: 3600, Days: 86400, Weeks: 604800 }, fromBase: { Seconds: 1, Minutes: 1/60, Hours: 1/3600, Days: 1/86400, Weeks: 1/604800 } }
+        };
+
+        function triggerHaptic(weight) { if (navigator.vibrate) navigator.vibrate(weight); }
+
+        function setSystemTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const tm = ['light', 'dark', 'blue', 'green', 'kids', 'adult', 'senior', 'student'];
+            const ids = ['theme-l-btn', 'theme-d-btn', 'theme-b-btn', 'theme-g-btn', 'theme-k-btn', 'theme-a-btn', 'theme-s-btn', 'theme-st-btn'];
+            let i = ids.length;
+            while(i--) { document.getElementById(ids[i]).classList.toggle('active', theme === tm[i]); }
+        }
+
+        function setWallpaperPattern(pattern) {
+            document.documentElement.style.setProperty('--active-wallpaper', pattern === 'none' ? 'none' : `var(--pat-${pattern})`);
+        }
+
+        function setClockMode(mode) {
+            clockDisplayMode = mode;
+            document.getElementById('clk-dig-btn').classList.toggle('active', mode === 'digital');
+            document.getElementById('clk-off-btn').classList.toggle('active', mode === 'hidden');
+            timerHdr.style.display = (mode === 'digital') ? 'block' : 'none';
+        }
+
+        function closeAllPanelsExcept(targetPanel) {
+            if(targetPanel !== converterPanel) converterPanel.classList.remove('open');
+            if(targetPanel !== settingsPanel) settingsPanel.classList.remove('open');
+            if(targetPanel !== thetaDrawerPanel) thetaDrawerPanel.classList.remove('open');
+        }
+
+        function togglePanel(panel, open) {
+            if(open) { closeAllPanelsExcept(panel); panel.classList.add('open'); } 
+            else { panel.classList.remove('open'); }
+        }
+
+        function toggleAngleMode() { angleMode = angleMode === 'deg' ? 'rad' : 'deg'; angleModeDisplay.innerText = angleMode; }
+
+        function switchConverterDomain(domain) {
+            currentConverterDomain = domain;
+            Object.keys(unitMatrix).forEach(d => {
+                const btn = document.getElementById(`tab-${d}`);
+                if (btn) btn.classList.toggle('active', d === domain);
+            });
+            document.getElementById('tab-hist').classList.remove('active');
+            historyContainer.style.display = 'none';
+            document.getElementById('converter-io-inputs').style.display = 'flex';
+            buildUnitSelectors();
+            
+            const targetBtn = document.getElementById(`tab-${domain}`);
+            if(targetBtn) targetBtn.parentNode.scrollTo({ left: targetBtn.offsetLeft - 40 });
+        }
+
+        function openInternalHistory() {
+            Object.keys(unitMatrix).forEach(d => { const btn = document.getElementById(`tab-${d}`); if (btn) btn.classList.remove('active'); });
+            document.getElementById('tab-hist').classList.add('active');
+            document.getElementById('converter-io-inputs').style.display = 'none';
+            historyContainer.style.display = 'flex';
+            renderHistoryLogs();
+        }
+
+        function buildUnitSelectors() {
+            const units = unitMatrix[currentConverterDomain].units;
+            fromSel.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+            toSel.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+            if(units.length > 1) toSel.selectedIndex = 1;
+            runUnitConversion();
+        }
+
+        function runUnitConversion() {
+            const fromUnit = fromSel.value; const toUnit = toSel.value;
+            const inputVal = parseFloat(fromValInput.value);
+            if(isNaN(inputVal)) { outField.value = ''; return; }
+            let result;
+            if (currentConverterDomain === 'temp') {
+                if(fromUnit === toUnit) result = inputVal;
+                else if(fromUnit === 'Celsius' && toUnit === 'Fahrenheit') result = (inputVal * 9/5) + 32;
+                else if(fromUnit === 'Celsius' && toUnit === 'Kelvin') result = inputVal + 273.15;
+                else if(fromUnit === 'Fahrenheit' && toUnit === 'Celsius') result = (inputVal - 32) * 5/9;
+                else if(fromUnit === 'Fahrenheit' && toUnit === 'Kelvin') result = (inputVal - 32) * 5/9 + 273.15;
+                else if(fromUnit === 'Kelvin' && toUnit === 'Celsius') result = inputVal - 273.15;
+                else if(fromUnit === 'Kelvin' && toUnit === 'Fahrenheit') result = (inputVal - 273.15) * 9/5 + 32;
+            } else {
+                const matrix = unitMatrix[currentConverterDomain];
+                result = (inputVal * matrix.toBase[fromUnit]) * matrix.fromBase[toUnit];
+            }
+            outField.value = cleanFloat(result);
+        }
+
+        function renderHistoryLogs() {
+            if (logsMemory.length === 0) {
+                historyContainer.innerHTML = `<div style="text-align: center; opacity: 0.4; margin-top: 20px;">Log Frame Clean</div>`;
+                return;
+            }
+            historyContainer.innerHTML = logsMemory.map(log => `<div class="history-item">${log}</div>`).join('');
+        }
+
+        function cleanStringTokens(str) {
+            return str.replace(/\*/g, '×').replace(/\//g, '÷')
+                      .replace(/sqrt\(/g, '√(').replace(/cbrt\(/g, '∛(')
+                      .replace(/abs\(/g, '|').replace(/asin\(/g, 'sin⁻¹(').replace(/acos\(/g, 'cos⁻¹(').replace(/atan\(/g, 'tan⁻¹(')
+                      .replace(/acsc\(/g, 'csc⁻¹(').replace(/asec\(/g, 'sec⁻¹(').replace(/acot\(/g, 'cot⁻¹(')
+                      .replace(/Math.PI/g, 'π').replace(/Math.E/g, 'e');
+        }
+
+        function updateUI() {
+            display.innerText = cleanStringTokens(formulaString);
+            displaySub.innerText = cleanStringTokens(subFormulaString || formulaString);
+        }
+
+        function cleanFloat(val) { if (isNaN(val) || !isFinite(val)) return 'Error'; return Math.round(val * 1e12) / 1e12; }
+        function runFactorialMath(n) { if (n < 0 || n % 1 !== 0) return NaN; if (n > 170) return Infinity; let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+
+        function parseAndEvaluate(expr) {
+            let cleanExpr = expr.replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E').replace(/\^/g, '**');
+            while (cleanExpr.includes('!')) {
+                let match = cleanExpr.match(/([0-9.]+)!/);
+                if (match) { cleanExpr = cleanExpr.replace(match[0], String(runFactorialMath(parseFloat(match[1])))); } 
+                else {
+                    let parenMatch = cleanExpr.match(/\(([^()]+)\)!/);
+                    if (parenMatch) { cleanExpr = cleanExpr.replace(parenMatch[0], String(runFactorialMath(parseFloat(parseAndEvaluate(parenMatch[1]))))); } 
+                    else { break; }
+                }
+            }
+            const functions = ['sqrt', 'cbrt', 'log', 'asin', 'acos', 'atan', 'acsc', 'asec', 'acot', 'sin', 'cos', 'tan', 'csc', 'sec', 'cot', 'abs'];
+            cleanExpr = cleanExpr.replace(/(\d+)\s*\(/g, '$1*(').replace(/\)\s*(\d+)/g, ')*$1');
+            functions.forEach(f => { cleanExpr = cleanExpr.replace(new RegExp(`(\\d+)\\s*${f}`, 'g'), `$1*${f}`); });
+            
+            let openCount = (cleanExpr.match(/\(/g) || []).length, closeCount = (cleanExpr.match(/\)/g) || []).length;
+            while (openCount > closeCount) { cleanExpr += ')'; closeCount++; }
+
+            const radConversion = (v) => angleMode === 'deg' ? v * (Math.PI / 180) : v;
+            const invRadConversion = (v) => angleMode === 'deg' ? v * (180 / Math.PI) : v;
+
+            const env = {
+                Math: Math,
+                sqrt: (x) => { if(x < 0) throw new Error(); return Math.sqrt(x); },
+                cbrt: (x) => Math.cbrt(x), log: (x) => { if(x <= 0) throw new Error(); return Math.log10(x); }, abs: (x) => Math.abs(x),
+                sin: (x) => Math.sin(radConversion(x)), cos: (x) => Math.cos(radConversion(x)),
+                tan: (x) => { if (angleMode === 'deg' && Math.abs(x % 180) === 90) throw new Error(); return Math.tan(radConversion(x)); },
+                csc: (x) => { const s = Math.sin(radConversion(x)); if (s === 0) throw new Error(); return 1 / s; },
+                sec: (x) => { const c = Math.cos(radConversion(x)); if (c === 0) throw new Error(); return 1 / c; },
+                cot: (x) => { const t = Math.tan(radConversion(x)); if (t === 0) throw new Error(); return 1 / t; },
+                asin: (x) => { if(x < -1 || x > 1) throw new Error(); return invRadConversion(Math.asin(x)); },
+                acos: (x) => { if(x < -1 || x > 1) throw new Error(); return invRadConversion(Math.acos(x)); },
+                atan: (x) => invRadConversion(Math.atan(x)),
+                acsc: (x) => { if(x > -1 && x < 1) throw new Error(); return invRadConversion(Math.asin(1 / x)); },
+                asec: (x) => { if(x > -1 && x < 1) throw new Error(); return invRadConversion(Math.acos(1 / x)); },
+                acot: (x) => { if(x === 0) return angleMode === 'deg' ? 90 : Math.PI / 2; return invRadConversion(Math.atan(1 / x)); }
+            };
+
+            try {
+                const evaluator = new Function('scope', `with(scope) { return ${cleanExpr}; }`);
+                let res = evaluator(env); return (res === undefined || res === null || isNaN(res)) ? 'Error' : cleanFloat(res);
+            } catch { return 'Error'; }
+        }
+
+        buildUnitSelectors();
+
+        function routingEngine(targetEl) {
+            const action = targetEl.getAttribute('data-action');
+            if (!action) return;
+
+            triggerHaptic(action === 'evaluate-formula' ? 22 : 8);
+
+            switch(action) {
+                case 'append-formula':
+                    let token = targetEl.getAttribute('data-formula-token');
+                    let operators = ['+', '-', '*', '/', '^'];
+                    if (operators.includes(token) && operators.includes(formulaString.slice(-1))) break; 
+
+                    if (formulaString === '0' || formulaString === 'Error' || isExecutionState) {
+                        formulaString = (operators.includes(token)) ? '0' + token : token; isExecutionState = false;
+                    } else { formulaString += token; }
+                    updateUI();
+                    break;
+
+                case 'evaluate-formula':
+                    if(formulaString === 'Error') return;
+                    let result = parseAndEvaluate(formulaString);
+                    if(result !== 'Error') { logsMemory.unshift(`${formulaString} = ${result}`); subFormulaString = formulaString; }
+                    formulaString = String(result); isExecutionState = true; updateUI();
+                    break;
+
+                case 'clear': formulaString = '0'; subFormulaString = ''; isExecutionState = false; updateUI(); break;
+                case 'backspace':
+                    if (formulaString === 'Error' || isExecutionState) { formulaString = '0'; isExecutionState = false; } 
+                    else if (formulaString.length > 1) {
+                        let cut = false;
+                        const tokens = ['sqrt(', 'cbrt(', 'sin(', 'cos(', 'tan(', 'csc(', 'sec(', 'cot(', 'asin(', 'acos(', 'atan(', 'acsc(', 'asec(', 'acot(', 'log(', 'abs('];
+                        for(let t of tokens) { if(formulaString.endsWith(t)) { formulaString = formulaString.slice(0, -t.length); cut = true; break; } }
+                        if(!cut) formulaString = formulaString.slice(0, -1);
+                        if(formulaString === '') formulaString = '0';
+                    } else { formulaString = '0'; }
+                    updateUI();
+                    break;
+
+                case 'percent': if (formulaString !== 'Error') { formulaString = String(parseAndEvaluate(formulaString + '/100')); isExecutionState = true; updateUI(); } break;
+                case 'parentheses':
+                    if (formulaString === '0' || formulaString === 'Error' || isExecutionState) { formulaString = '('; isExecutionState = false; } 
+                    else {
+                        let openC = (formulaString.match(/\(/g) || []).length, closeC = (formulaString.match(/\)/g) || []).length;
+                        let last = formulaString.slice(-1);
+                        if (['+', '-', '*', '/', '(', '^'].includes(last)) formulaString += '(';
+                        else if (openC > closeC) formulaString += ')';
+                        else formulaString += '*(';
+                    }
+                    updateUI();
+                    break;
+
+                case 'toggle-polarity':
+                    if (formulaString === '0' || formulaString === 'Error' || isExecutionState) { formulaString = '-'; isExecutionState = false; } 
+                    else {
+                        let last = formulaString.slice(-1);
+                        if(['+', '-', '*', '/', '^'].includes(last)) formulaString += '-';
+                        else formulaString = formulaString.startsWith('-') ? formulaString.slice(1) : '-' + formulaString;
+                    }
+                    updateUI();
+                    break;
+
+                case 'open-theta-panel': togglePanel(thetaDrawerPanel, true); break;
+                case 'close-theta-panel': togglePanel(thetaDrawerPanel, false); break;
+                case 'open-converter': togglePanel(converterPanel, true); switchConverterDomain('length'); break;
+                case 'open-history-tray': togglePanel(converterPanel, true); openInternalHistory(); break;
+                case 'close-converter': togglePanel(converterPanel, false); break;
+                case 'open-settings': togglePanel(settingsPanel, true); break;
+                case 'close-settings': togglePanel(settingsPanel, false); break;
+                case 'toggle-angle-mode': toggleAngleMode(); break;
+                case 'switch-domain': switchConverterDomain(targetEl.getAttribute('data-domain')); break;
+                case 'open-logs': openInternalHistory(); break;
+                
+                case 'theme-light': setSystemTheme('light'); break;
+                case 'theme-dark': setSystemTheme('dark'); break;
+                case 'theme-blue': setSystemTheme('blue'); break;
+                case 'theme-green': setSystemTheme('green'); break;
+                case 'theme-kids': setSystemTheme('kids'); break;
+                case 'theme-adult': setSystemTheme('adult'); break;
+                case 'theme-senior': setSystemTheme('senior'); break;
+                case 'theme-student': setSystemTheme('student'); break;
+                case 'clk-digital': setClockMode('digital'); break;
+                case 'clk-hidden': setClockMode('hidden'); break;
+            }
+        }
+
+        /* ==========================================
+           4. HIGH-SPEED MOBILITY INTERACTION INTERFACES
+           ========================================== */
+        let activeTouchElement = null;
+
+        const executeTouchStart = (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target || target.classList.contains('converter-field') || e.target.tagName === 'SELECT') return;
+            
+            activeTouchElement = target;
+            activeTouchElement.classList.add('ui-depressed'); // Visual depress state maps immediately on contact
+            triggerHaptic(5);
+        };
+
+        const executeTouchEnd = (e) => {
+            if (!activeTouchElement) return;
+            
+            activeTouchElement.classList.remove('ui-depressed');
+            
+            // Verify user released touch while still inside bounds of original button
+            const changedTouch = e.changedTouches[0];
+            const targetBounds = activeTouchElement.getBoundingClientRect();
+            
+            if (changedTouch.clientX >= targetBounds.left && changedTouch.clientX <= targetBounds.right &&
+                changedTouch.clientY >= targetBounds.top && changedTouch.clientY <= targetBounds.bottom) {
+                e.preventDefault();
+                routingEngine(activeTouchElement);
+            }
+            activeTouchElement = null;
+        };
+
+        const executeTouchCancel = () => {
+            if (activeTouchElement) { activeTouchElement.classList.remove('ui-depressed'); activeTouchElement = null; }
+        };
+
+        const frame = document.querySelector('.calculator-frame');
+
+        // High-speed Touch Interface Mapping for Mobile Devices
+        frame.addEventListener('touchstart', executeTouchStart, { passive: true });
+        frame.addEventListener('touchend', executeTouchEnd, { passive: false });
+        frame.addEventListener('touchmove', (e) => {
+            if(!activeTouchElement) return;
+            const currentTouch = e.touches[0];
+            const bounds = activeTouchElement.getBoundingClientRect();
+            // Dragging out of bounds releases the visual downstate smoothly
+            if (currentTouch.clientX < bounds.left || currentTouch.clientX > bounds.right ||
+                currentTouch.clientY < bounds.top || currentTouch.clientY > bounds.bottom) {
+                activeTouchElement.classList.remove('ui-depressed');
+            } else {
+                activeTouchElement.classList.add('ui-depressed');
+            }
+        }, { passive: true });
+        frame.addEventListener('touchcancel', executeTouchCancel, { passive: true });
+
+        // Desktop Mouse Failover Fallbacks
+        frame.addEventListener('mousedown', (e) => {
+            if ('ontouchstart' in window) return; 
+            const target = e.target.closest('[data-action]');
+            if (!target || target.classList.contains('converter-field') || e.target.tagName === 'SELECT') return;
+            target.classList.add('ui-depressed');
+            activeTouchElement = target;
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (!activeTouchElement) return;
+            activeTouchElement.classList.remove('ui-depressed');
+            const target = e.target.closest('[data-action]');
+            if (target === activeTouchElement) { routingEngine(activeTouchElement); }
+            activeTouchElement = null;
+        });
+
+        fromSel.addEventListener('change', runUnitConversion);
+        toSel.addEventListener('change', runUnitConversion);
+        fromValInput.addEventListener('input', runUnitConversion);
+        document.getElementById('wallpaper-pattern-selector').addEventListener('change', (e) => setWallpaperPattern(e.target.value));
+
+        setInterval(() => {
+            if(clockDisplayMode === 'digital') {
+                const now = new Date(), p = (n) => String(n).padStart(2, '0');
+                timerHdr.innerText = `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+            }
+        }, 1000);
+
+        updateUI();
+    </script>
+</body>
+</html>

@@ -5,61 +5,359 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My App Hub</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    :root {
+      --bg: #f6f4ef;
+      --surface: #ffffff;
+      --surface-hover: #fcfbf8;
+      --border: #e4dfd5;
+      --border-hover: #c5bdb0;
+      --text-primary: #1c1f26;
+      --text-secondary: #5c6270;
+      --text-muted: #8a909e;
+      --accent-blue-bg: #eef4ff;
+      --accent-blue-fg: #2563eb;
+      --accent-amber-bg: #fef6e7;
+      --accent-amber-fg: #b45309;
+      --shadow-sm: 0 1px 3px rgba(28, 31, 38, 0.04);
+      --shadow-md: 0 10px 24px -6px rgba(28, 31, 38, 0.08);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
     }
-    .container {
-      background: #ffffff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 48px 24px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
+
+    .wrapper {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+
+    /* Header & Search */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      padding-bottom: 28px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
     h1 {
-      color: #333333;
-      margin-bottom: 10px;
-      font-size: 24px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
     }
-    p {
-      color: #666666;
-      margin-bottom: 30px;
+
+    .subtitle {
       font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 4px;
     }
-    .btn {
-      display: block;
-      background-color: #2563eb;
-      color: #ffffff;
+
+    .search-box {
+      position: relative;
+      width: 100%;
+      max-width: 260px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 36px 10px 36px;
+      font-size: 14px;
+      color: var(--text-primary);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-blue-fg);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .shortcut-hint {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 6px;
+      pointer-events: none;
+    }
+
+    /* Section Label */
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Grid */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* App Card */
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
       text-decoration: none;
-      padding: 14px 20px;
-      margin: 12px 0;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      transition: background-color 0.2s;
+      color: inherit;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
     }
-    .btn:hover {
-      background-color: #1d4ed8;
+
+    .app-card:hover {
+      transform: translateY(-3px);
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .icon-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .badge-blue {
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue-fg);
+    }
+
+    .badge-amber {
+      background: var(--accent-amber-bg);
+      color: var(--accent-amber-fg);
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .arrow {
+      transition: transform 0.2s ease;
+    }
+
+    .app-card:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-secondary);
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    @media (max-width: 540px) {
+      body {
+        padding: 28px 16px;
+      }
+      .search-box {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>My App Hub</h1>
-    <p>Select an app below to launch it:</p>
+  <div class="wrapper">
+    <header>
+      <div>
+        <div class="eyebrow">Personal Workspace</div>
+        <h1>My App Hub</h1>
+        <p class="subtitle">Quick access to your web tools and interactive projects</p>
+      </div>
 
-    <!-- Replace the href values with your exact HTML file names in the docs folder -->
-    <a href="visdic.html" class="btn">📖 Visual Dictionary</a>
-    <a href="calculator.html" class="btn">🧮 Calculator App</a>
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="filterInput" placeholder="Filter apps..." aria-label="Filter apps" />
+        <span class="shortcut-hint">/</span>
+      </div>
+    </header>
+
+    <div class="section-label">Applications</div>
+
+    <main class="app-grid" id="appGrid">
+      <!-- Visual Dictionary Card -->
+      <a href="visdic.html" class="app-card" data-keywords="visual dictionary reference words images">
+        <div>
+          <div class="card-top">
+            <div class="icon-badge badge-blue">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <span class="tag">Reference</span>
+          </div>
+          <div class="card-title">Visual Dictionary</div>
+          <p class="card-desc">Browse illustrated terms, visual references, and categorized entries.</p>
+        </div>
+        <div class="card-footer">
+          <span>Open App</span>
+          <span class="arrow">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Calculator App Card -->
+      <a href="calculator.html" class="app-card" data-keywords="calculator math numbers utility">
+        <div>
+          <div class="card-top">
+            <div class="icon-badge badge-amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="18"></line>
+                <path d="M16 10h.01"></path>
+                <path d="M12 10h.01"></path>
+                <path d="M8 10h.01"></path>
+                <path d="M12 14h.01"></path>
+                <path d="M8 14h.01"></path>
+                <path d="M12 18h.01"></path>
+                <path d="M8 18h.01"></path>
+              </svg>
+            </div>
+            <span class="tag">Utility</span>
+          </div>
+          <div class="card-title">Calculator App</div>
+          <p class="card-desc">Fast arithmetic calculations with a clean, distraction-free keypad.</p>
+        </div>
+        <div class="card-footer">
+          <span>Open App</span>
+          <span class="arrow">&rarr;</span>
+        </div>
+      </a>
+    </main>
+
+    <div class="empty-state" id="emptyState">
+      No matching apps found. Try a different keyword.
+    </div>
   </div>
+
+  <script>
+    const filterInput = document.getElementById('filterInput');
+    const cards = document.querySelectorAll('.app-card');
+    const emptyState = document.getElementById('emptyState');
+
+    filterInput.addEventListener('input', () => {
+      const query = filterInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const text = (card.innerText + ' ' + (card.dataset.keywords || '')).toLowerCase();
+        const match = text.includes(query);
+        card.style.display = match ? 'flex' : 'none';
+        if (match) visibleCount++;
+      });
+
+      emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== filterInput) {
+        e.preventDefault();
+        filterInput.focus();
+      }
+    });
+  </script>
 
 </body>
 </html>
